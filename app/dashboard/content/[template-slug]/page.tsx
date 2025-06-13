@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useContext, useState } from 'react';
 import FormSection from './components/FormSection';
 import OutputSection from './components/OutputSection';
@@ -16,13 +17,17 @@ import { UserSubscriptionContext } from '@/app/(context)/UserSubscriptionContext
 import { UpdateCreditUsageContext } from '@/app/(context)/UpdateCreditUsageContext';
 import { useRouter } from 'next/navigation';
 
-export default function CreateNewContent({
-  params,
-}: {
-  params: { 'template-slug': string };
-}) {
-  const selectedTemplete: TEMPLETE | undefined = Templetes?.find(
-    (item) => item.slug === params['templete-slug']
+type Props = {
+  params: {
+    'template-slug': string;
+  };
+};
+
+export default function CreateNewContent({ params }: Props) {
+  const slug = params['template-slug'];
+
+  const selectedTemplete: TEMPLETE | undefined = Templetes.find(
+    (item) => item.slug === slug
   );
 
   const [aiOutput, setAIOutput] = useState<string>('');
@@ -40,8 +45,10 @@ export default function CreateNewContent({
       router.push('/dashboard/billing');
       return;
     }
+
     setLoading(true);
     let result = '';
+
     try {
       const selectedPrompt = selectedTemplete?.aiPrompt || '';
       const finalAIPrompt = JSON.stringify(formData) + ',' + selectedPrompt;
@@ -55,7 +62,7 @@ export default function CreateNewContent({
     }
 
     try {
-      await SaveInDb(formData, selectedTemplete?.slug, result);
+      await SaveInDb(formData, selectedTemplete?.slug ?? '', result);
     } catch (error) {
       console.error('Error saving to DB:', error);
     } finally {
