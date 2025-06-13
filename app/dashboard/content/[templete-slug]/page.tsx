@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import FormSection from './components/FormSection';
 import OutputSection from './components/OutputSection';
 import { TEMPLETE } from '../../_components/TempleteListSection';
@@ -11,6 +11,10 @@ import { AIOutput } from '@/utils/Schema';
 import { db } from '@/utils/db';
 import { useUser } from '@clerk/nextjs';
 import moment from 'moment';
+import { TotalUsageContext } from '@/app/(context)/TotalUsageContext';
+import { useRouter } from 'next/router';
+import { UserSubscriptionContext } from '@/app/(context)/UserSubscriptionContext';
+import { UpdateCreditUsageContext } from '@/app/(context)/UpdateCreditUsageContext';
 
 interface PROPS {
   params: {
@@ -26,8 +30,24 @@ function CreateNewContent({ params }: PROPS) {
   const [aiOutput, setAIOutput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { user } = useUser();
+  const router = useRouter();
+
+    const {totalUsage,setTotalUsage}= useContext(TotalUsageContext)
+    const {userSubscription, setUserSubscription} = useContext(UserSubscriptionContext);
+    const {updateCreitUsage, setUpdateCreitUsage} = useContext(UpdateCreditUsageContext)
+  
+    /**
+     * Usef to generate content from AI
+     * @param formData 
+     * @returns 
+     */
 
   const generateAIContent = async (formData: any) => {
+    if(totalUsage >= 10000 && !userSubscription){
+        console.log("Please Upgrade")
+        router.push('/dashboard/billing')
+        return ;
+    }
     setLoading(true);
     let result = '';
     try {
@@ -48,6 +68,7 @@ function CreateNewContent({ params }: PROPS) {
       console.error('Error saving to DB:', error);
     } finally {
       setLoading(false);
+      setUpdateCreitUsage(Date.now())
     }
   };
 

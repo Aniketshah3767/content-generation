@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import Templetes from '@/app/(data)/Templetes'
 import TempleteCard from './TempleteCard'
 
-export interface TEMPLETE{
+export interface TEMPLETE {
     name : string,
     desc : string,
     icon : string,
