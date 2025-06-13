@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useContext, useState } from 'react';
 import FormSection from './components/FormSection';
 import OutputSection from './components/OutputSection';
@@ -12,9 +12,9 @@ import { db } from '@/utils/db';
 import { useUser } from '@clerk/nextjs';
 import moment from 'moment';
 import { TotalUsageContext } from '@/app/(context)/TotalUsageContext';
-import { useRouter } from 'next/router';
 import { UserSubscriptionContext } from '@/app/(context)/UserSubscriptionContext';
 import { UpdateCreditUsageContext } from '@/app/(context)/UpdateCreditUsageContext';
+import { useRouter } from 'next/navigation'; // ✅ fixed import
 
 interface PROPS {
   params: {
@@ -32,21 +32,15 @@ function CreateNewContent({ params }: PROPS) {
   const { user } = useUser();
   const router = useRouter();
 
-    const {totalUsage,setTotalUsage}= useContext(TotalUsageContext)
-    const {userSubscription, setUserSubscription} = useContext(UserSubscriptionContext);
-    const {updateCreitUsage, setUpdateCreitUsage} = useContext(UpdateCreditUsageContext)
-  
-    /**
-     * Usef to generate content from AI
-     * @param formData 
-     * @returns 
-     */
+  const { totalUsage, setTotalUsage } = useContext(TotalUsageContext);
+  const { userSubscription, setUserSubscription } = useContext(UserSubscriptionContext);
+  const { updateCreitUsage, setUpdateCreitUsage } = useContext(UpdateCreditUsageContext);
 
   const generateAIContent = async (formData: any) => {
-    if(totalUsage >= 10000 && !userSubscription){
-        console.log("Please Upgrade")
-        router.push('/dashboard/billing')
-        return ;
+    if (totalUsage >= 10000 && !userSubscription) {
+      console.log("Please Upgrade");
+      router.push('/dashboard/billing');
+      return;
     }
     setLoading(true);
     let result = '';
@@ -68,7 +62,7 @@ function CreateNewContent({ params }: PROPS) {
       console.error('Error saving to DB:', error);
     } finally {
       setLoading(false);
-      setUpdateCreitUsage(Date.now())
+      setUpdateCreitUsage(Date.now());
     }
   };
 
@@ -78,7 +72,7 @@ function CreateNewContent({ params }: PROPS) {
       templeteSlug: slug,
       aiResponse: aiResp,
       createdBy: user?.primaryEmailAddress?.emailAddress,
-      createdAt: moment().format('DD/MM/YYYY'), 
+      createdAt: moment().format('DD/MM/YYYY'),
     });
     console.log(result);
   };
@@ -90,14 +84,11 @@ function CreateNewContent({ params }: PROPS) {
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 py-5">
-        {/* Form section */}
         <FormSection
           selectedTemplete={selectedTemplete}
           userFormInput={generateAIContent}
           loading={loading}
         />
-
-        {/* Output Section */}
         <div className="col-span-2">
           <OutputSection aiOutput={aiOutput} />
         </div>
