@@ -1,6 +1,5 @@
 'use client';
-
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import FormSection from './components/FormSection';
 import OutputSection from './components/OutputSection';
 import { TEMPLETE } from '../../_components/TempleteListSection';
@@ -17,40 +16,48 @@ import { UserSubscriptionContext } from '@/app/(context)/UserSubscriptionContext
 import { UpdateCreditUsageContext } from '@/app/(context)/UpdateCreditUsageContext';
 import { useRouter } from 'next/navigation';
 
-// 👇 Removed custom Props interface
-export default function CreateNewContent({
-  params,
-}: {
-  params: { 'template-slug': string };
-}) {
-  const slug = params['template-slug'];
+interface PageProps {
+  params: Promise<{ 'template-slug': string }>;
+}
 
-  const selectedTemplete: TEMPLETE | undefined = Templetes.find(
-    (item) => item.slug === slug
-  );
-
+export default function CreateNewContent({ params }: PageProps) {
+  const [slug, setSlug] = useState<string>('');
+  const [selectedTemplete, setSelectedTemplete] = useState<TEMPLETE | undefined>(undefined);
   const [aiOutput, setAIOutput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const { user } = useUser();
   const router = useRouter();
-
   const { totalUsage, setTotalUsage } = useContext(TotalUsageContext);
   const { userSubscription } = useContext(UserSubscriptionContext);
   const { setUpdateCreitUsage } = useContext(UpdateCreditUsageContext);
+
+  // Handle async params
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      const templateSlug = resolvedParams['template-slug'];
+      setSlug(templateSlug);
+      
+      const foundTemplate = Templetes.find(
+        (item) => item.slug === templateSlug
+      );
+      setSelectedTemplete(foundTemplate);
+    };
+    
+    resolveParams();
+  }, [params]);
 
   const generateAIContent = async (formData: any) => {
     if (totalUsage >= 10000 && !userSubscription) {
       router.push('/dashboard/billing');
       return;
     }
-
     setLoading(true);
     try {
       const selectedPrompt = selectedTemplete?.aiPrompt || '';
       const finalAIPrompt = JSON.stringify(formData) + ',' + selectedPrompt;
       const result = await generateText(finalAIPrompt);
       setAIOutput(result);
-
       await db.insert(AIOutput).values({
         formData,
         templeteSlug: slug,
@@ -58,7 +65,6 @@ export default function CreateNewContent({
         createdBy: user?.primaryEmailAddress?.emailAddress,
         createdAt: moment().format('DD/MM/YYYY'),
       });
-
       setUpdateCreitUsage(Date.now());
     } catch (error) {
       console.error('Error:', error);
@@ -68,12 +74,20 @@ export default function CreateNewContent({
     }
   };
 
+  // Show loading state while params are being resolved
+  if (!slug || !selectedTemplete) {
+    return (
+      <div className="p-5">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-5">
       <Link href="/dashboard">
         <Button>Back</Button>
       </Link>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 py-5">
         <FormSection
           selectedTemplete={selectedTemplete}
