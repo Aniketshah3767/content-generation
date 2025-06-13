@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 export default function CreateNewContent({
   params,
 }: {
-  params: { 'templete-slug': string };
+  params: { 'template-slug': string };
 }) {
   const selectedTemplete: TEMPLETE | undefined = Templetes?.find(
     (item) => item.slug === params['templete-slug']
