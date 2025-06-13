@@ -14,15 +14,13 @@ import moment from 'moment';
 import { TotalUsageContext } from '@/app/(context)/TotalUsageContext';
 import { UserSubscriptionContext } from '@/app/(context)/UserSubscriptionContext';
 import { UpdateCreditUsageContext } from '@/app/(context)/UpdateCreditUsageContext';
-import { useRouter } from 'next/navigation'; // ✅ fixed import
+import { useRouter } from 'next/navigation';
 
-interface PROPS {
-  params: {
-    'templete-slug': string;
-  };
-}
-
-function CreateNewContent({ params }: PROPS) {
+export default function CreateNewContent({
+  params,
+}: {
+  params: { 'templete-slug': string };
+}) {
   const selectedTemplete: TEMPLETE | undefined = Templetes?.find(
     (item) => item.slug === params['templete-slug']
   );
@@ -38,7 +36,7 @@ function CreateNewContent({ params }: PROPS) {
 
   const generateAIContent = async (formData: any) => {
     if (totalUsage >= 10000 && !userSubscription) {
-      console.log("Please Upgrade");
+      console.log('Please Upgrade');
       router.push('/dashboard/billing');
       return;
     }
@@ -96,5 +94,3 @@ function CreateNewContent({ params }: PROPS) {
     </div>
   );
 }
-
-export default CreateNewContent;
