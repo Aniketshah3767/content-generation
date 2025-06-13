@@ -17,13 +17,12 @@ import { UserSubscriptionContext } from '@/app/(context)/UserSubscriptionContext
 import { UpdateCreditUsageContext } from '@/app/(context)/UpdateCreditUsageContext';
 import { useRouter } from 'next/navigation';
 
-type Props = {
-  params: {
-    'template-slug': string;
-  };
-};
-
-export default function CreateNewContent({ params }: Props) {
+// 👇 Removed custom Props interface
+export default function CreateNewContent({
+  params,
+}: {
+  params: { 'template-slug': string };
+}) {
   const slug = params['template-slug'];
 
   const selectedTemplete: TEMPLETE | undefined = Templetes.find(
@@ -36,50 +35,37 @@ export default function CreateNewContent({ params }: Props) {
   const router = useRouter();
 
   const { totalUsage, setTotalUsage } = useContext(TotalUsageContext);
-  const { userSubscription, setUserSubscription } = useContext(UserSubscriptionContext);
-  const { updateCreitUsage, setUpdateCreitUsage } = useContext(UpdateCreditUsageContext);
+  const { userSubscription } = useContext(UserSubscriptionContext);
+  const { setUpdateCreitUsage } = useContext(UpdateCreditUsageContext);
 
   const generateAIContent = async (formData: any) => {
     if (totalUsage >= 10000 && !userSubscription) {
-      console.log('Please Upgrade');
       router.push('/dashboard/billing');
       return;
     }
 
     setLoading(true);
-    let result = '';
-
     try {
       const selectedPrompt = selectedTemplete?.aiPrompt || '';
       const finalAIPrompt = JSON.stringify(formData) + ',' + selectedPrompt;
-      result = await generateText(finalAIPrompt);
+      const result = await generateText(finalAIPrompt);
       setAIOutput(result);
-    } catch (error) {
-      console.error('Error generating AI content:', error);
-      setAIOutput('Failed to generate content.');
-      setLoading(false);
-      return;
-    }
 
-    try {
-      await SaveInDb(formData, selectedTemplete?.slug ?? '', result);
+      await db.insert(AIOutput).values({
+        formData,
+        templeteSlug: slug,
+        aiResponse: result,
+        createdBy: user?.primaryEmailAddress?.emailAddress,
+        createdAt: moment().format('DD/MM/YYYY'),
+      });
+
+      setUpdateCreitUsage(Date.now());
     } catch (error) {
-      console.error('Error saving to DB:', error);
+      console.error('Error:', error);
+      setAIOutput('Failed to generate content.');
     } finally {
       setLoading(false);
-      setUpdateCreitUsage(Date.now());
     }
-  };
-
-  const SaveInDb = async (formData: any, slug: string, aiResp: string) => {
-    const result = await db.insert(AIOutput).values({
-      formData,
-      templeteSlug: slug,
-      aiResponse: aiResp,
-      createdBy: user?.primaryEmailAddress?.emailAddress,
-      createdAt: moment().format('DD/MM/YYYY'),
-    });
-    console.log(result);
   };
 
   return (
